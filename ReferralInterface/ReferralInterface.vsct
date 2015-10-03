@@ -4,13 +4,22 @@
   <Extern href="vsshlids.h"/>
   <Commands package="guidReferralInterfacePkg">
     <Groups>
-      <Group guid="guidReferralInterfaceCmdSet" id="MenuGroup" priority="0x0100">
+      <Group guid="guidReferralInterfaceCmdSet" id="ReferenceRoot" priority="0x0100">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_REFERENCEROOT"/>
+      </Group>
+      <Group guid="guidReferralInterfaceCmdSet" id="ProjectAdd" priority="0x0150">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CSCD_PROJECT_ADD" />
       </Group>
     </Groups>
     <Buttons>
-      <Button guid="guidReferralInterfaceCmdSet" id="cmdid" priority="0x0000" type="Button">
-        <Parent guid="guidReferralInterfaceCmdSet" id="MenuGroup" />
+      <Button guid="guidReferralInterfaceCmdSet" id="cmdid1" priority="0x0000" type="Button">
+        <Parent guid="guidReferralInterfaceCmdSet" id="ReferenceRoot" />
+        <Strings>
+          <ButtonText>添加WEB接口引用...</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidReferralInterfaceCmdSet" id="cmdid2" priority="0x0000" type="Button">
+        <Parent guid="guidReferralInterfaceCmdSet" id="ProjectAdd" />
         <Strings>
           <ButtonText>添加WEB接口引用...</ButtonText>
         </Strings>
@@ -20,8 +29,10 @@
   <Symbols>
     <GuidSymbol name="guidReferralInterfacePkg" value="{cd99437d-2833-4f58-9de8-c753f1843b07}" />
     <GuidSymbol name="guidReferralInterfaceCmdSet" value="{35e69ffb-6e3f-430d-a028-d605d8ff4dc8}">
-      <IDSymbol name="MenuGroup" value="0x1020" />
-      <IDSymbol name="cmdid" value="0x0100" />
+      <IDSymbol name="ReferenceRoot" value="0x1020" />
+      <IDSymbol name="ProjectAdd" value="0x1021" />
+      <IDSymbol name="cmdid1" value="0x0100" />
+      <IDSymbol name="cmdid2" value="0x0101" />
     </GuidSymbol>
   </Symbols>
 </CommandTable>

@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using VSLangProj;
 using System.Net;
+using System.Windows;
 
 namespace wnxd.ReferralInterface
 {
@@ -31,31 +32,41 @@ namespace wnxd.ReferralInterface
             OleMenuCommandService mcs = this.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (mcs != null)
             {
-                CommandID menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, (int)PkgCmdIDList.cmdid);
+                CommandID menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, (int)PkgCmdIDList.cmdid1);
                 MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
+                mcs.AddCommand(menuItem);
+                menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, (int)PkgCmdIDList.cmdid2);
+                menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
                 mcs.AddCommand(menuItem);
             }
         }
         private void MenuItemCallback(object sender, EventArgs e)
         {
-            IVsMonitorSelection MonitorSelection = (IVsMonitorSelection)this.GetService(typeof(SVsShellMonitorSelection));
-            IntPtr hierarchyPtr, selectionContainerPtr;
-            uint pitemid;
-            IVsMultiItemSelect mis;
-            MonitorSelection.GetCurrentSelection(out hierarchyPtr, out pitemid, out mis, out selectionContainerPtr);
-            IVsHierarchy hierarchy = (IVsHierarchy)Marshal.GetTypedObjectForIUnknown(hierarchyPtr, typeof(IVsHierarchy));
-            object obj;
-            hierarchy.GetProperty((uint)VSConstants.VSITEMID.Root, (int)__VSHPROPID.VSHPROPID_ExtObject, out obj);
-            this.cproject = (Project)obj;
-            string path = this.cproject.Properties.Item("FullPath").Value.ToString();
-            string name = "Interface";
-            if (Directory.Exists(path + name))
+            try
             {
-                int i = 1;
-                do name = "Interface" + (i++).ToString();
-                while (Directory.Exists(path + name));
+                IVsMonitorSelection MonitorSelection = (IVsMonitorSelection)this.GetService(typeof(SVsShellMonitorSelection));
+                IntPtr hierarchyPtr, selectionContainerPtr;
+                uint pitemid;
+                IVsMultiItemSelect mis;
+                MonitorSelection.GetCurrentSelection(out hierarchyPtr, out pitemid, out mis, out selectionContainerPtr);
+                IVsHierarchy hierarchy = (IVsHierarchy)Marshal.GetTypedObjectForIUnknown(hierarchyPtr, typeof(IVsHierarchy));
+                object obj;
+                hierarchy.GetProperty((uint)VSConstants.VSITEMID.Root, (int)__VSHPROPID.VSHPROPID_ExtObject, out obj);
+                this.cproject = (Project)obj;
+                string path = this.cproject.Properties.Item("FullPath").Value.ToString();
+                string name = "Interface";
+                if (Directory.Exists(path + name))
+                {
+                    int i = 1;
+                    do name = "Interface" + (i++).ToString();
+                    while (Directory.Exists(path + name));
+                }
+                new Add(this, this.cproject.Properties.Item("DefaultNamespace").Value.ToString(), name, path).ShowDialog();
             }
-            new Add(this, this.cproject.Properties.Item("DefaultNamespace").Value.ToString(), name, path).ShowDialog();
+            catch
+            {
+                MessageBox.Show("本插件暂时只支持C#");
+            }
         }
         internal void AddFromDirectory(string dir)
         {
@@ -63,33 +74,9 @@ namespace wnxd.ReferralInterface
             if (VSProject != null)
             {
                 string path = this.cproject.Properties.Item("FullPath").Value.ToString();
-                try
-                {
-                    Reference Reference = VSProject.References.Find("wnxd.Web");
-                    if (Reference == null) throw new Exception();
-                }
-                catch
-                {
-                    this.AddReference(VSProject.References, "wnxd.web.dll", path);
-                }
-                try
-                {
-                    Reference Reference = VSProject.References.Find("wnxd.javascript");
-                    if (Reference == null) throw new Exception();
-                }
-                catch
-                {
-                    this.AddReference(VSProject.References, "wnxd.javascript.dll", path);
-                }
-                try
-                {
-                    Reference Reference = VSProject.References.Find("Microsoft.CSharp");
-                    if (Reference == null) throw new Exception();
-                }
-                catch
-                {
-                    VSProject.References.Add("Microsoft.CSharp");
-                }
+                if (VSProject.References.Find("wnxd.Web") == null) this.AddReference(VSProject.References, "wnxd.web.dll", path);
+                if (VSProject.References.Find("wnxd.javascript") == null) this.AddReference(VSProject.References, "wnxd.javascript.dll", path);
+                if (VSProject.References.Find("Microsoft.CSharp") == null) VSProject.References.Add("Microsoft.CSharp");
             }
             this.cproject.ProjectItems.AddFromDirectory(dir);
         }
