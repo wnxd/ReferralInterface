@@ -65,7 +65,9 @@ namespace wnxd.ReferralInterface
             }
             catch
             {
-                MessageBox.Show("本插件暂时只支持C#");
+                IVsUIShell uiShell = (IVsUIShell)this.GetService(typeof(SVsUIShell));
+                int result;
+                uiShell.ShowMessageBox(0, Guid.Empty, "提示", "本插件暂时只支持C#", string.Empty, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_INFO, 0, out result);
             }
         }
         internal void AddFromDirectory(string dir)
