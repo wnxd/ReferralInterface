@@ -84,11 +84,22 @@ namespace wnxd.ReferralInterface
         }
         private void AddReference(References References, string name, string dir)
         {
-            using (WebClient client = new WebClient())
+            if (!File.Exists(dir + name))
             {
-                client.DownloadFile("http://wnxd.me/dll/" + name, dir + name);
-                References.Add(dir + name);
+                using (WebClient client = new WebClient())
+                {
+                xh:
+                    try
+                    {
+                        client.DownloadFile("http://wnxd.me/dll/" + name, dir + name);
+                    }
+                    catch
+                    {
+                        goto xh;
+                    }
+                }
             }
+            References.Add(dir + name);
         }
     }
 }
