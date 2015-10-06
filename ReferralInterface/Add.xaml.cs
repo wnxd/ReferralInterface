@@ -144,23 +144,30 @@ namespace wnxd.ReferralInterface
         }
         private static string Post(string url, string data)
         {
-            WebRequest request = WebRequest.Create(url + "wnxd.aspx?wnxd_interface=" + query);
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            byte[] bytes = Encoding.UTF8.GetBytes(data);
-            request.ContentLength = bytes.Length;
-            using (Stream dataStream = request.GetRequestStream())
+            try
             {
-                dataStream.Write(bytes, 0, bytes.Length);
-                dataStream.Flush();
+                WebRequest request = WebRequest.Create(url + "wnxd.aspx?wnxd_interface=" + query);
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+                byte[] bytes = Encoding.UTF8.GetBytes(data);
+                request.ContentLength = bytes.Length;
+                using (Stream dataStream = request.GetRequestStream())
+                {
+                    dataStream.Write(bytes, 0, bytes.Length);
+                    dataStream.Flush();
+                }
+                using (WebResponse response = request.GetResponse())
+                using (Stream dataStream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(dataStream))
+                {
+                    string responseData = reader.ReadToEnd();
+                    if (!string.IsNullOrEmpty(responseData)) responseData = DecryptString(responseData, "wnxd: interface_data");
+                    return responseData;
+                }
             }
-            using (WebResponse response = request.GetResponse())
-            using (Stream dataStream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(dataStream))
+            catch
             {
-                string responseData = reader.ReadToEnd();
-                if (!string.IsNullOrEmpty(responseData)) responseData = DecryptString(responseData, "wnxd: interface_data");
-                return responseData;
+                return null;
             }
         }
         private static string EncryptString(string sInputString, string sKey)
