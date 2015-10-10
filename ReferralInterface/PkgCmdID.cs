@@ -6,7 +6,7 @@ namespace wnxd.ReferralInterface
 {
     static class PkgCmdIDList
     {
-        public const uint cmdid1 = 0x100;
-        public const uint cmdid2 = 0x101;
+        public const int add = 0x100;
+        public const int update = 0x101;
     };
 }

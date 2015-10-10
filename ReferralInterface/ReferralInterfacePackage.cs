@@ -32,15 +32,15 @@ namespace wnxd.ReferralInterface
             OleMenuCommandService mcs = this.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (mcs != null)
             {
-                CommandID menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, (int)PkgCmdIDList.cmdid1);
-                MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
+                CommandID menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, PkgCmdIDList.add);
+                MenuCommand menuItem = new MenuCommand(this.cmd_AddReferences, menuCommandID);
                 mcs.AddCommand(menuItem);
-                menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, (int)PkgCmdIDList.cmdid2);
-                menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
+                menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, PkgCmdIDList.update);
+                menuItem = new MenuCommand(this.cmd_UpdateReferences, menuCommandID);
                 mcs.AddCommand(menuItem);
             }
         }
-        private void MenuItemCallback(object sender, EventArgs e)
+        private void cmd_AddReferences(object sender, EventArgs e)
         {
             try
             {
@@ -70,6 +70,10 @@ namespace wnxd.ReferralInterface
                 uiShell.ShowMessageBox(0, Guid.Empty, "提示", "本插件暂时只支持C#", string.Empty, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_INFO, 0, out result);
             }
         }
+        private void cmd_UpdateReferences(object sender, EventArgs e)
+        {
+
+        }
         internal void AddFromDirectory(string dir)
         {
             VSProject VSProject = this.cproject.Object as VSProject;
@@ -80,7 +84,12 @@ namespace wnxd.ReferralInterface
                 if (VSProject.References.Find("wnxd.javascript") == null) this.AddReference(VSProject.References, "wnxd.javascript.dll", path);
                 if (VSProject.References.Find("Microsoft.CSharp") == null) VSProject.References.Add("Microsoft.CSharp");
             }
-            this.cproject.ProjectItems.AddFromDirectory(dir);
+            ProjectItem pi = this.cproject.ProjectItems.AddFromDirectory(dir);
+            if (pi.ProjectItems.Count == 0)
+            {
+                string[] list = Directory.GetFiles(dir, "*.cs");
+                for (int i = 0; i < list.Length; i++) pi.ProjectItems.AddFromFile(list[i]);
+            }
         }
         private void AddReference(References References, string name, string dir)
         {
