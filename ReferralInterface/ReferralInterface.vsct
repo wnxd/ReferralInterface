@@ -5,11 +5,15 @@
   <Commands package="guidReferralInterfacePkg">
     <Buttons>
       <Button guid="guidReferralInterfaceCmdSet" id="add" priority="0x0000" type="Button">
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>添加WEB接口引用...</ButtonText>
         </Strings>
       </Button>
       <Button guid="guidReferralInterfaceCmdSet" id="update" priority="0x0000" type="Button">
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>更新WEB接口引用</ButtonText>
         </Strings>
@@ -23,10 +27,7 @@
     <CommandPlacement guid="guidReferralInterfaceCmdSet" id="add" priority="0xf000">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_REFERENCES"/>
     </CommandPlacement>
-    <CommandPlacement guid="guidReferralInterfaceCmdSet" id="update" priority="0xf001">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_REFROOT_ADD"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidReferralInterfaceCmdSet" id="update" priority="0x0101">
+    <CommandPlacement guid="guidReferralInterfaceCmdSet" id="update" priority="0x0100">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_UNLOADRELOAD"/>
     </CommandPlacement>
     <CommandPlacement guid="guidReferralInterfaceCmdSet" id="update" priority="0x0100">
