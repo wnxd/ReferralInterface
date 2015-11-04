@@ -1,24 +1,14 @@
-﻿using Microsoft.VisualBasic;
-using Microsoft.VisualStudio.Shell;
-using System;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 using System.Web.Security;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using wnxd.javascript;
 
 namespace wnxd.ReferralInterface
@@ -69,77 +59,90 @@ namespace wnxd.ReferralInterface
                     Directory.CreateDirectory(dir);
                     if (this.textbox.Text.Substring(0, 4) != "http") this.textbox.Text = "http://" + this.textbox.Text;
                     if (this.textbox.Text.Last() != '/') this.textbox.Text += "/";
-                    json arr = new json(Post(this.textbox.Text, EncryptString(new json(new { Name = "interface_info", List = this.list.SelectedItems }).ToString(), "wnxd: interface_data")));
-                    if (arr.GetType() == "array")
-                    {
-                        for (int i = 0; i < arr.length; i++)
-                        {
-                            json info = arr[i];
-                            string Namespace = info["Namespace"];
-                            string ClassName = info["ClassName"];
-                            json Methods = info["Methods"];
-                            using (FileStream fs = File.OpenWrite(dir + ClassName + ".cs"))
-                            using (StreamWriter sw = new StreamWriter(fs))
-                            {
-                                sw.WriteLine("namespace " + this.np.Text);
-                                sw.WriteLine("{");
-                                sw.WriteLine("    public class " + ClassName + " : wnxd.Web.InterfaceBase");
-                                sw.WriteLine("    {");
-                                sw.WriteLine("        public " + ClassName + "()");
-                                sw.WriteLine("        {");
-                                sw.WriteLine("            this.Domain = \"" + this.textbox.Text + "\";");
-                                sw.WriteLine("            this.Namespace = \"" + Namespace + "\";");
-                                sw.WriteLine("            this.ClassName = \"" + ClassName + "\";");
-                                sw.WriteLine("        }");
-                                for (int n = 0; n < Methods.length; n++)
-                                {
-                                    json MethodInfo = Methods[n];
-                                    string MethodName = MethodInfo["MethodName"];
-                                    string ReturnType = MethodInfo["ReturnType"];
-                                    json Parameters = MethodInfo["Parameters"];
-                                    string summary = MethodInfo["summary"];
-                                    if (!string.IsNullOrEmpty(summary))
-                                    {
-                                        sw.WriteLine("        /// <summary>");
-                                        sw.WriteLine("        /// " + summary);
-                                        sw.WriteLine("        /// </summary>");
-                                    }
-                                    bool isvoid = false;
-                                    if (ReturnType == "System.Void") isvoid = true;
-                                    string args = string.Empty;
-                                    sw.Write("        public " + (isvoid ? "void" : ReturnType) + " " + MethodName + "(");
-                                    for (int x = 0; x < Parameters.length; x++)
-                                    {
-                                        json ParameterInfo = Parameters[x];
-                                        string ParameterName = ParameterInfo["ParameterName"];
-                                        int Type = ParameterInfo["Type"];
-                                        bool IsOptional = ParameterInfo["IsOptional"];
-                                        string ParameterType = ParameterInfo["ParameterType"];
-                                        if (x > 0) sw.Write(", ");
-                                        if (Type == 2) sw.Write("ref ");
-                                        else if (Type == 1) sw.Write("out ");
-                                        sw.Write(ParameterType + " " + ParameterName);
-                                        args += ", " + ParameterName;
-                                    }
-                                    sw.WriteLine(")");
-                                    sw.WriteLine("        {");
-                                    sw.WriteLine("            wnxd.javascript.json r = this.Run(\"" + MethodName + "\"" + args + ");");
-                                    if (!isvoid)
-                                    {
-                                        if (ReturnType == "wnxd.javascript.json") sw.WriteLine("            return r;");
-                                        else sw.WriteLine("            return (" + ReturnType + ")r.TryConvert(typeof(" + ReturnType + "));");
-                                    }
-                                    sw.WriteLine("        }");
-                                }
-                                sw.WriteLine("    }");
-                                sw.Write("}");
-                                sw.Flush();
-                            }
-                        }
-                    }
+                    CreateInterface(dir, this.textbox.Text, this.np.Text, this.list.SelectedItems);
                     this._Package.AddFromDirectory(dir);
                 }
                 this.Close();
+            }
+        }
+        internal static void CreateInterface(string Directory, string Domain, string Namespace, IList List, Func<string, string> WriteFunc = null)
+        {
+            json arr = new json(Post(Domain, EncryptString(new json(new { Name = "interface_info", List = List }).ToString(), "wnxd: interface_data")));
+            if (arr.GetType() == "array")
+            {
+                for (int i = 0; i < arr.length; i++)
+                {
+                    json info = arr[i];
+                    string sNamespace = info["Namespace"];
+                    string ClassName = info["ClassName"];
+                    string FileName = ClassName + ".cs";
+                    json Methods = info["Methods"];
+                    if (WriteFunc != null) FileName = WriteFunc(FileName);
+                    using (FileStream fs = File.Open(Directory + FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
+                    using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        sw.WriteLine("//Domain");
+                        sw.WriteLine("//" + Domain);
+                        sw.WriteLine("//Namespace");
+                        sw.WriteLine("//" + Namespace);
+                        sw.WriteLine("//ClassName");
+                        sw.WriteLine("//" + sNamespace + "." + ClassName);
+                        sw.WriteLine("//请勿修改上述接口信息");
+                        sw.WriteLine("namespace " + Namespace);
+                        sw.WriteLine("{");
+                        sw.WriteLine("    public class " + ClassName + " : wnxd.Web.InterfaceBase");
+                        sw.WriteLine("    {");
+                        sw.WriteLine("        public " + ClassName + "()");
+                        sw.WriteLine("        {");
+                        sw.WriteLine("            this.Domain = \"" + Domain + "\";");
+                        sw.WriteLine("            this.Namespace = \"" + sNamespace + "\";");
+                        sw.WriteLine("            this.ClassName = \"" + ClassName + "\";");
+                        sw.WriteLine("        }");
+                        for (int n = 0; n < Methods.length; n++)
+                        {
+                            json MethodInfo = Methods[n];
+                            string MethodName = MethodInfo["MethodName"];
+                            string ReturnType = MethodInfo["ReturnType"];
+                            json Parameters = MethodInfo["Parameters"];
+                            string summary = MethodInfo["summary"];
+                            if (!string.IsNullOrEmpty(summary))
+                            {
+                                sw.WriteLine("        /// <summary>");
+                                sw.WriteLine("        /// " + summary);
+                                sw.WriteLine("        /// </summary>");
+                            }
+                            bool isvoid = false;
+                            if (ReturnType == "System.Void") isvoid = true;
+                            string args = string.Empty;
+                            sw.Write("        public " + (isvoid ? "void" : ReturnType) + " " + MethodName + "(");
+                            for (int x = 0; x < Parameters.length; x++)
+                            {
+                                json ParameterInfo = Parameters[x];
+                                string ParameterName = ParameterInfo["ParameterName"];
+                                int Type = ParameterInfo["Type"];
+                                bool IsOptional = ParameterInfo["IsOptional"];
+                                string ParameterType = ParameterInfo["ParameterType"];
+                                if (x > 0) sw.Write(", ");
+                                if (Type == 2) sw.Write("ref ");
+                                else if (Type == 1) sw.Write("out ");
+                                sw.Write(ParameterType + " " + ParameterName);
+                                args += ", " + ParameterName;
+                            }
+                            sw.WriteLine(")");
+                            sw.WriteLine("        {");
+                            sw.WriteLine("            wnxd.javascript.json r = this.Run(\"" + MethodName + "\"" + args + ");");
+                            if (!isvoid)
+                            {
+                                if (ReturnType == "wnxd.javascript.json") sw.WriteLine("            return r;");
+                                else sw.WriteLine("            return (" + ReturnType + ")r.TryConvert(typeof(" + ReturnType + "));");
+                            }
+                            sw.WriteLine("        }");
+                        }
+                        sw.WriteLine("    }");
+                        sw.Write("}");
+                        sw.Flush();
+                    }
+                }
             }
         }
         private static string Post(string url, string data)
