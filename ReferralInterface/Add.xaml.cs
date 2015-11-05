@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -18,8 +19,10 @@ namespace wnxd.ReferralInterface
     /// </summary>
     public partial class Add : Window
     {
-        private static string query = HttpUtility.UrlEncode(EncryptString("$query$", "wnxd: interface_name"));
-        private static string interface_name = EncryptString("{\"Name\":\"interface_name\"}", "wnxd: interface_data");
+        private const string Interface_Name_Key = "wnxd: interface_name";
+        private const string Interface_Data_Key = "wnxd: interface_data";
+        private static string query = HttpUtility.UrlEncode(EncryptString("$query$", Interface_Name_Key));
+        private static string interface_name = EncryptString("{\"Name\":\"interface_name\"}", Interface_Data_Key);
         private ReferralInterfacePackage _Package;
         private string _name;
         private string _path;
@@ -67,16 +70,16 @@ namespace wnxd.ReferralInterface
         }
         internal static void CreateInterface(string Directory, string Domain, string Namespace, IList List, Func<string, string> WriteFunc = null)
         {
-            json arr = new json(Post(Domain, EncryptString(new json(new { Name = "interface_info", List = List }).ToString(), "wnxd: interface_data")));
+            json arr = new json(Post(Domain, EncryptString(new json(new { Name = "interface_info", List = List }).ToString(), Interface_Data_Key)));
             if (arr.GetType() == "array")
             {
                 for (int i = 0; i < arr.length; i++)
                 {
-                    json info = arr[i];
-                    string sNamespace = info["Namespace"];
-                    string ClassName = info["ClassName"];
+                    _ClassInfo info = (_ClassInfo)arr[i];
+                    string sNamespace = info.Namespace;
+                    string ClassName = info.ClassName;
                     string FileName = ClassName + ".cs";
-                    json Methods = info["Methods"];
+                    IList<_MethodInfo> Methods = info.Methods;
                     if (WriteFunc != null) FileName = WriteFunc(FileName);
                     using (FileStream fs = File.Open(Directory + FileName, FileMode.Create, FileAccess.Write, FileShare.Read))
                     using (StreamWriter sw = new StreamWriter(fs))
@@ -98,13 +101,14 @@ namespace wnxd.ReferralInterface
                         sw.WriteLine("            this.Namespace = \"" + sNamespace + "\";");
                         sw.WriteLine("            this.ClassName = \"" + ClassName + "\";");
                         sw.WriteLine("        }");
-                        for (int n = 0; n < Methods.length; n++)
+                        for (int n = 0; n < Methods.Count; n++)
                         {
-                            json MethodInfo = Methods[n];
-                            string MethodName = MethodInfo["MethodName"];
-                            string ReturnType = MethodInfo["ReturnType"];
-                            json Parameters = MethodInfo["Parameters"];
-                            string summary = MethodInfo["summary"];
+                            _MethodInfo MethodInfo = Methods[n];
+                            int MethodToken = MethodInfo.MethodToken;
+                            string MethodName = MethodInfo.MethodName;
+                            string ReturnType = MethodInfo.ReturnType;
+                            IList<_ParameterInfo> Parameters = MethodInfo.Parameters;
+                            string summary = MethodInfo.Summary;
                             if (!string.IsNullOrEmpty(summary))
                             {
                                 sw.WriteLine("        /// <summary>");
@@ -115,22 +119,34 @@ namespace wnxd.ReferralInterface
                             if (ReturnType == "System.Void") isvoid = true;
                             string args = string.Empty;
                             sw.Write("        public " + (isvoid ? "void" : ReturnType) + " " + MethodName + "(");
-                            for (int x = 0; x < Parameters.length; x++)
+                            for (int x = 0; x < Parameters.Count; x++)
                             {
-                                json ParameterInfo = Parameters[x];
-                                string ParameterName = ParameterInfo["ParameterName"];
-                                int Type = ParameterInfo["Type"];
-                                bool IsOptional = ParameterInfo["IsOptional"];
-                                string ParameterType = ParameterInfo["ParameterType"];
+                                _ParameterInfo ParameterInfo = Parameters[x];
+                                string ParameterName = ParameterInfo.ParameterName;
+                                _ParameterType Type = ParameterInfo.Type;
+                                bool IsOptional = ParameterInfo.IsOptional;
+                                string ParameterType = ParameterInfo.ParameterType;
                                 if (x > 0) sw.Write(", ");
-                                if (Type == 2) sw.Write("ref ");
-                                else if (Type == 1) sw.Write("out ");
+                                switch (Type)
+                                {
+                                    case _ParameterType.In:
+                                        break;
+                                    case _ParameterType.Out:
+                                        sw.Write("out ");
+                                        break;
+                                    case _ParameterType.Retval:
+                                        sw.Write("ref ");
+                                        break;
+                                }
                                 sw.Write(ParameterType + " " + ParameterName);
                                 args += ", " + ParameterName;
                             }
                             sw.WriteLine(")");
                             sw.WriteLine("        {");
-                            sw.WriteLine("            wnxd.javascript.json r = this.Run(\"" + MethodName + "\"" + args + ");");
+                            sw.Write("            wnxd.javascript.json r = this.Run(\"");
+                            if (MethodToken == 0) sw.Write(MethodName);
+                            else sw.Write(MethodToken);
+                            sw.WriteLine("\"" + args + ");");
                             if (!isvoid)
                             {
                                 if (ReturnType == "wnxd.javascript.json") sw.WriteLine("            return r;");
@@ -164,7 +180,7 @@ namespace wnxd.ReferralInterface
                 using (StreamReader reader = new StreamReader(dataStream))
                 {
                     string responseData = reader.ReadToEnd();
-                    if (!string.IsNullOrEmpty(responseData)) responseData = DecryptString(responseData, "wnxd: interface_data");
+                    if (!string.IsNullOrEmpty(responseData)) responseData = DecryptString(responseData, Interface_Data_Key);
                     return responseData;
                 }
             }
@@ -195,5 +211,33 @@ namespace wnxd.ReferralInterface
             byte[] result = desencrypt.TransformFinalBlock(data, 0, data.Length);
             return Encoding.UTF8.GetString(result);
         }
+    }
+    class _ClassInfo
+    {
+        public string Namespace { get; set; }
+        public string ClassName { get; set; }
+        public IList<_MethodInfo> Methods { get; set; }
+    }
+    class _MethodInfo
+    {
+        public int MethodToken { get; set; }
+        public string MethodName { get; set; }
+        public string ReturnType { get; set; }
+        public IList<_ParameterInfo> Parameters { get; set; }
+        public string Summary { get; set; }
+    }
+    class _ParameterInfo
+    {
+        public string ParameterName { get; set; }
+        public _ParameterType Type { get; set; }
+        public bool IsOptional { get; set; }
+        public object DefaultValue { get; set; }
+        public string ParameterType { get; set; }
+    }
+    enum _ParameterType
+    {
+        In,
+        Out,
+        Retval
     }
 }
