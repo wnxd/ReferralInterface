@@ -19,19 +19,24 @@ namespace wnxd.ReferralInterface
     public sealed class ReferralInterfacePackage : Package
     {
         private Project cproject;
+        private bool init = true;
         protected override void Initialize()
         {
-            OleMenuCommandService mcs = this.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (mcs != null)
+            if (this.init)
             {
-                CommandID menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, PkgCmdIDList.add);
-                OleMenuCommand menuItem = new OleMenuCommand(this.cmd_AddReferences, menuCommandID);
-                menuItem.BeforeQueryStatus += menuItem_BeforeQueryStatus;
-                mcs.AddCommand(menuItem);
-                menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, PkgCmdIDList.update);
-                menuItem = new OleMenuCommand(this.cmd_UpdateReferences, menuCommandID);
-                menuItem.BeforeQueryStatus += menuItem_BeforeQueryStatus;
-                mcs.AddCommand(menuItem);
+                this.init = false;
+                OleMenuCommandService mcs = this.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+                if (mcs != null)
+                {
+                    CommandID menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, PkgCmdIDList.add);
+                    OleMenuCommand menuItem = new OleMenuCommand(this.cmd_AddReferences, menuCommandID);
+                    menuItem.BeforeQueryStatus += menuItem_BeforeQueryStatus;
+                    mcs.AddCommand(menuItem);
+                    menuCommandID = new CommandID(GuidList.guidReferralInterfaceCmdSet, PkgCmdIDList.update);
+                    menuItem = new OleMenuCommand(this.cmd_UpdateReferences, menuCommandID);
+                    menuItem.BeforeQueryStatus += menuItem_BeforeQueryStatus;
+                    mcs.AddCommand(menuItem);
+                }
             }
         }
         private void cmd_AddReferences(object sender, EventArgs e)
