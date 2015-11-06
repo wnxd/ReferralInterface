@@ -74,8 +74,15 @@ namespace wnxd.ReferralInterface
             OleMenuCommand menuCommand = sender as OleMenuCommand;
             if (menuCommand != null)
             {
-                this.GetProject();
-                menuCommand.Visible = this.cproject.CodeModel.Language == CodeModelLanguageConstants.vsCMLanguageCSharp;
+                try
+                {
+                    this.GetProject();
+                    menuCommand.Visible = this.cproject.CodeModel.Language == CodeModelLanguageConstants.vsCMLanguageCSharp;
+                }
+                catch
+                {
+
+                }
             }
         }
         private IVsHierarchy GetCurrentSelection(out uint pitemid)

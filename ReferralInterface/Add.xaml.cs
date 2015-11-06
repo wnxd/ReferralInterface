@@ -119,6 +119,7 @@ namespace wnxd.ReferralInterface
                             if (ReturnType == "System.Void") isvoid = true;
                             string args = string.Empty;
                             sw.Write("        public " + (isvoid ? "void" : ReturnType) + " " + MethodName + "(");
+                            IDictionary<string, string> outparams = new Dictionary<string, string>();
                             for (int x = 0; x < Parameters.Count; x++)
                             {
                                 _ParameterInfo ParameterInfo = Parameters[x];
@@ -133,12 +134,15 @@ namespace wnxd.ReferralInterface
                                         break;
                                     case _ParameterType.Out:
                                         sw.Write("out ");
+                                        outparams.Add(ParameterName, ParameterType);
                                         break;
                                     case _ParameterType.Retval:
                                         sw.Write("ref ");
+                                        outparams.Add(ParameterName, ParameterType);
                                         break;
                                 }
                                 sw.Write(ParameterType + " " + ParameterName);
+                                if (IsOptional) sw.Write(" = " + ParameterInfo.DefaultValue.ToString());
                                 args += ", " + ParameterName;
                             }
                             sw.WriteLine(")");
@@ -147,6 +151,17 @@ namespace wnxd.ReferralInterface
                             if (MethodToken == 0) sw.Write("\"" + MethodName + "\"");
                             else sw.Write(MethodToken);
                             sw.WriteLine(args + ");");
+                            if (outparams.Count > 0)
+                            {
+                                sw.WriteLine("            wnxd.javascript.json outparams = r[\"OutParams\"];");
+                                sw.WriteLine("            r = r[\"Data\"];");
+                                int y = 0;
+                                foreach (KeyValuePair<string, string> item in outparams)
+                                {
+                                    sw.WriteLine("            " + item.Key + " = " + "(" + item.Value + ")outparams[" + y + "]" + ".TryConvert(typeof(" + item.Value + "));");
+                                    y++;
+                                }
+                            }
                             if (!isvoid)
                             {
                                 if (ReturnType == "wnxd.javascript.json") sw.WriteLine("            return r;");
@@ -231,7 +246,7 @@ namespace wnxd.ReferralInterface
         public string ParameterName { get; set; }
         public _ParameterType Type { get; set; }
         public bool IsOptional { get; set; }
-        public object DefaultValue { get; set; }
+        public json DefaultValue { get; set; }
         public string ParameterType { get; set; }
     }
     enum _ParameterType
