@@ -143,10 +143,10 @@ namespace wnxd.ReferralInterface
                             }
                             sw.WriteLine(")");
                             sw.WriteLine("        {");
-                            sw.Write("            wnxd.javascript.json r = this.Run(\"");
-                            if (MethodToken == 0) sw.Write(MethodName);
+                            sw.Write("            wnxd.javascript.json r = this.Run(");
+                            if (MethodToken == 0) sw.Write("\"" + MethodName + "\"");
                             else sw.Write(MethodToken);
-                            sw.WriteLine("\"" + args + ");");
+                            sw.WriteLine(args + ");");
                             if (!isvoid)
                             {
                                 if (ReturnType == "wnxd.javascript.json") sw.WriteLine("            return r;");
