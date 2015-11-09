@@ -131,19 +131,21 @@ namespace wnxd.ReferralInterface
                                 switch (Type)
                                 {
                                     case _ParameterType.In:
+                                        args += ", " + ParameterName;
                                         break;
                                     case _ParameterType.Out:
                                         sw.Write("out ");
                                         outparams.Add(ParameterName, ParameterType);
+                                        args += ", null";
                                         break;
                                     case _ParameterType.Retval:
                                         sw.Write("ref ");
                                         outparams.Add(ParameterName, ParameterType);
+                                        args += ", " + ParameterName;
                                         break;
                                 }
                                 sw.Write(ParameterType + " " + ParameterName);
                                 if (IsOptional) sw.Write(" = " + ParameterInfo.DefaultValue.ToString());
-                                args += ", " + ParameterName;
                             }
                             sw.WriteLine(")");
                             sw.WriteLine("        {");
