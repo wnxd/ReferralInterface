@@ -104,7 +104,7 @@ namespace wnxd.ReferralInterface
                         for (int n = 0; n < Methods.Count; n++)
                         {
                             _MethodInfo MethodInfo = Methods[n];
-                            int MethodToken = MethodInfo.MethodToken;
+                            string MethodToken = MethodInfo.MethodToken;
                             string MethodName = MethodInfo.MethodName;
                             string ReturnType = MethodInfo.ReturnType;
                             IList<_ParameterInfo> Parameters = MethodInfo.Parameters;
@@ -149,10 +149,7 @@ namespace wnxd.ReferralInterface
                             }
                             sw.WriteLine(")");
                             sw.WriteLine("        {");
-                            sw.Write("            wnxd.javascript.json r = this.Run(");
-                            if (MethodToken == 0) sw.Write("\"" + MethodName + "\"");
-                            else sw.Write(MethodToken);
-                            sw.WriteLine(args + ");");
+                            sw.WriteLine("            wnxd.javascript.json r = this.Run(\"" + (string.IsNullOrEmpty(MethodToken) ? MethodName : MethodToken) + "\"" + args + ");");
                             if (outparams.Count > 0)
                             {
                                 sw.WriteLine("            wnxd.javascript.json outparams = r[\"OutParams\"];");
@@ -237,7 +234,7 @@ namespace wnxd.ReferralInterface
     }
     class _MethodInfo
     {
-        public int MethodToken { get; set; }
+        public string MethodToken { get; set; }
         public string MethodName { get; set; }
         public string ReturnType { get; set; }
         public IList<_ParameterInfo> Parameters { get; set; }

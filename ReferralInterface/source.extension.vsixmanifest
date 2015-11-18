@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="cd99437d-2833-4f58-9de8-c753f1843b07" Version="0.8" Language="zh-Hans" Publisher="为你芯冻" />
+    <Identity Id="cd99437d-2833-4f58-9de8-c753f1843b07" Version="0.9" Language="zh-Hans" Publisher="为你芯冻" />
     <DisplayName>ReferralInterface</DisplayName>
     <Description>引用WEB接口</Description>
   </Metadata>
