@@ -149,7 +149,10 @@ namespace wnxd.ReferralInterface
                             }
                             sw.WriteLine(")");
                             sw.WriteLine("        {");
-                            sw.WriteLine("            wnxd.javascript.json r = this.Run(\"" + (string.IsNullOrEmpty(MethodToken) ? MethodName : MethodToken) + "\"" + args + ");");
+                            sw.Write("            wnxd.javascript.json r = this.");
+                            if (MethodInfo.CacheTime == null) sw.Write("Run(");
+                            else sw.Write("GetCache(" + MethodInfo.CacheTime.Value + ", ");
+                            sw.WriteLine("\"" + (string.IsNullOrEmpty(MethodToken) ? MethodName : MethodToken) + "\"" + args + ");");
                             if (outparams.Count > 0)
                             {
                                 sw.WriteLine("            wnxd.javascript.json outparams = r[\"OutParams\"];");
@@ -239,6 +242,7 @@ namespace wnxd.ReferralInterface
         public string ReturnType { get; set; }
         public IList<_ParameterInfo> Parameters { get; set; }
         public string Summary { get; set; }
+        public int? CacheTime { get; set; }
     }
     class _ParameterInfo
     {
